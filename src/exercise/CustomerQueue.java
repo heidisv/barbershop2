@@ -36,18 +36,67 @@ public class CustomerQueue {
 		
 		int min = 0;
 		int place = 18; // There is 18 places available in the waiting room
+		for(int i = 0; i<newQueue.length; i++){
+			if(newQueue[i]!=null){
+				if(min==0){
+					min = newQueue[i].getCustomerID();
+							place = i;
+	
+				}
+			}
+		}
+		gui.println("Customer no." + newQueue[place].getCustomerID() +" is fetched from waitingroom");
+		gui.emptyLoungeChair(place);
 		
+		currentLength = currentLength-1; //reducing number of customers in the queue
+		
+		if(currentLength == newQueue.length-1){
+			notifyAll();
+		}
+		Customer customer = newQueue[place];
+		newQueue[place] = null;
+		return customer;
 	}
 
 	private boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+		for(int i=0; i<newQueue.length; i++){
+			if(newQueue[i]!=null)
+				return false;
+		}
+		return true;
+	}
+	
+	private boolean isFull(){
+		for(int i=0; i<newQueue.length; i++){
+			if(newQueue[i]==null)
+				return false;
+		}
+		return true;
 	}
 
-	public void addCustomer(Customer customer) {
-		// TODO Auto-generated method stub
+	public synchronized void addCustomer(Customer customer) {
+		while(isFull()){
+			gui.println("The doorman has to wait for an available chair.");
+			try{
+				wait();
+			}
+			catch (InterruptedException error){
+				gui.println("A chair is available.");
+			}
+		}
+		for(int i=0; i<newQueue.length; i++){
+			if(newQueue[i] == null){
+				newQueue[i] = customer;
+				gui.fillLoungeChair(i, customer);
+				break;
+			}
+		}
+		currentLength = currentLength +1; //adding customers to the queue
+		
+		if(currentLength==1){
+			notifyAll();
+		}
+		gui.println("A new customer has arrived the waitingroom.");
 		
 	}
-
-	// Add more methods as needed
 }
