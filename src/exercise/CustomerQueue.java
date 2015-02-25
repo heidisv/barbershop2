@@ -10,6 +10,7 @@ public class CustomerQueue {
 	 * @param gui			A reference to the GUI interface.
 	 */
 	
+	Private Customer[] newQueue;
 	private int maxQueue;
 	private Gui gui;
 	
@@ -17,6 +18,7 @@ public class CustomerQueue {
     public CustomerQueue(int queueLength, Gui gui) {
 		this.maxQueue = queueLength;
 		this.gui = gui;
+		newQueue = new Customer[maxQueue];
 	}
 
 
