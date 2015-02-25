@@ -35,5 +35,17 @@ public class Doorman extends Thread{
 		running = false;
 	}
 
-	// Add more methods as needed
+	public void run(){
+		while (running){
+			try{
+				//Sleep for random time
+				sleep((long)(Globals.doormanSleep*Math.random()));
+			}
+			catch (InterruptedException error){
+			}
+			// Fetch a new customer
+			gui.println("Let in a new customer");
+			cosQueue.addCustomer(new Customer());
+		}
+	}
 }

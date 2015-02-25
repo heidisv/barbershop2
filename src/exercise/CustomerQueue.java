@@ -10,21 +10,43 @@ public class CustomerQueue {
 	 * @param gui			A reference to the GUI interface.
 	 */
 	
-	Private Customer[] newQueue;
-	private int maxQueue;
+	private Customer[] newQueue;
+	private int currentLength;
 	private Gui gui;
 	
 	
     public CustomerQueue(int queueLength, Gui gui) {
-		this.maxQueue = queueLength;
+		
 		this.gui = gui;
-		newQueue = new Customer[maxQueue];
+		newQueue = new Customer[queueLength];
+		currentLength = 0;
+		
 	}
 
+	public synchronized Customer getNextCustomer(int barberpos) {
+		while (isEmpty()){
+			gui.println("Barber nr." + barberpos + " is waiting");
+			try{
+				wait();
+			}
+			catch (InterruptedException error){
+				gui.println("Barber no." + barberpos + " has a new customer!");
+			}
+		}
+		
+		int min = 0;
+		int place = 18; // There is 18 places available in the waiting room
+		
+	}
 
-	public Customer getNextCustomer(int barberpos) {
+	private boolean isEmpty() {
 		// TODO Auto-generated method stub
-		return null;
+		return false;
+	}
+
+	public void addCustomer(Customer customer) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	// Add more methods as needed
