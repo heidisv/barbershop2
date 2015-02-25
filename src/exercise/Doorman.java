@@ -11,12 +11,12 @@ public class Doorman extends Thread{
 	 * @param gui		A reference to the GUI interface.
 	 */
 	
-	private CustomerQueue queue;
+	private CustomerQueue cosQueue;
 	private Gui gui;
 	private boolean running;
 
 	public Doorman(CustomerQueue queue, Gui gui) { 
-		this.queue = queue;
+		cosQueue = queue;
 		this.gui = gui;
 	}
 
