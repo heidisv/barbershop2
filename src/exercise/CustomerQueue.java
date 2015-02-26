@@ -50,6 +50,7 @@ public class CustomerQueue {
 		
 		currentLength = currentLength-1; //reducing number of customers in the queue
 		
+		// If the queue was full notify the others of the new empty place
 		if(currentLength == newQueue.length-1){
 			notifyAll();
 		}
@@ -84,6 +85,7 @@ public class CustomerQueue {
 				gui.println("A chair is available.");
 			}
 		}
+		// Add the new customer to the empty chair in the waiting room
 		for(int i=0; i<newQueue.length; i++){
 			if(newQueue[i] == null){
 				newQueue[i] = customer;
@@ -93,6 +95,7 @@ public class CustomerQueue {
 		}
 		currentLength = currentLength +1; //adding customers to the queue
 		
+		//If the waiting room has been empty, notify that there has come a new customer
 		if(currentLength==1){
 			notifyAll();
 		}
