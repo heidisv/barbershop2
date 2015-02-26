@@ -38,7 +38,7 @@ public class Doorman extends Thread{
 	public void run(){
 		while (running){
 			try{
-				//Sleep for random time
+				// Wait/sleep for random time
 				sleep((long)(Globals.doormanSleep*Math.random()));
 			}
 			catch (InterruptedException error){

@@ -43,22 +43,23 @@ public class Barber extends Thread{
 		while(running){
 			try{
 				gui.barberIsSleeping(barberpos);
+				// Waiting/sleeping for a random time
 				sleep((long)(Globals.barberSleep*Math.random()));
 				gui.barberIsAwake(barberpos);
 			}
 			catch(InterruptedException error){
 			}
-			//henter folk
+			// Getting the next customer in the queue/waitingroom
 			gui.fillBarberChair(barberpos, customerQueue.getNextCustomer(barberpos));
 		
-			//klipper
+			// Waiting while the Barber is working on a customer
 			try{
 				sleep((long)(Globals.barberWork*Math.random()));
 			}
 			catch(InterruptedException error2){
 				
 			}
-			//ferdig
+			// The Barber is finished with a customer, and the chair is awailable for a new customer
 			gui.emptyBarberChair(barberpos);
 		}
 	}

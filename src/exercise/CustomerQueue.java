@@ -22,11 +22,13 @@ public class CustomerQueue {
 		currentLength = 0;
 		
 	}
-
+    
+    //The synchronized-method ensures that only one Barber has access to the next customer at the time
 	public synchronized Customer getNextCustomer(int barberpos) {
 		while (isEmpty()){
 			gui.println("Barber nr." + barberpos + " is waiting");
 			try{
+				//If the queue is empty, the Barbers is put in a waiting-state
 				wait();
 			}
 			catch (InterruptedException error){
@@ -34,8 +36,9 @@ public class CustomerQueue {
 			}
 		}
 		
-		int min = 0;
+		int min = 0; //zero customers in the waitingroom
 		int place = 18; // There is 18 places available in the waiting room
+		//Finding the next available chair
 		for(int i = 0; i<newQueue.length; i++){
 			if(newQueue[i]!=null){
 				if(min==0){
@@ -58,7 +61,7 @@ public class CustomerQueue {
 		newQueue[place] = null;
 		return customer;
 	}
-
+	//Checking whether the queue is empty
 	private boolean isEmpty() {
 		for(int i=0; i<newQueue.length; i++){
 			if(newQueue[i]!=null)
@@ -66,7 +69,7 @@ public class CustomerQueue {
 		}
 		return true;
 	}
-	
+	//Checking whether the queue is full
 	private boolean isFull(){
 		for(int i=0; i<newQueue.length; i++){
 			if(newQueue[i]==null)
@@ -76,6 +79,7 @@ public class CustomerQueue {
 	}
 
 	public synchronized void addCustomer(Customer customer) {
+		//If the queue is full, the doorman is put in a wait-state
 		while(isFull()){
 			gui.println("The doorman has to wait for an available chair.");
 			try{
@@ -85,6 +89,7 @@ public class CustomerQueue {
 				gui.println("A chair is available.");
 			}
 		}
+		//If the waitingroom is not full:
 		// Add the new customer to the empty chair in the waiting room
 		for(int i=0; i<newQueue.length; i++){
 			if(newQueue[i] == null){
@@ -96,6 +101,7 @@ public class CustomerQueue {
 		currentLength = currentLength +1; //adding customers to the queue
 		
 		//If the waiting room has been empty, notify that there has come a new customer
+		//Wake the barbers form wait-state
 		if(currentLength==1){
 			notifyAll();
 		}
