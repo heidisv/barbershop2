@@ -1,3 +1,5 @@
+package exercise3;
+
 /**
  * This class contains information about an event. The different
  * types of events are described in the Constants interface.

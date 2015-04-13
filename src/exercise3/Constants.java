@@ -1,3 +1,5 @@
+package exercise3;
+
 public interface Constants 
 {
 	/** Event type describing the arrival of a new process */

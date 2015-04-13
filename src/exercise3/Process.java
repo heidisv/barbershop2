@@ -1,3 +1,5 @@
+package exercise3;
+
 import java.awt.*;
 import java.util.*;
 
