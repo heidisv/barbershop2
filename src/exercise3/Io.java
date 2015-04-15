@@ -9,7 +9,7 @@ public class Io {
 	
 	private Process activeProcess = null;
 	
-	public Io(Queue ioQueue, Statistics statistics, long ioWait, Gui gui){
+	public Io(Queue ioQueue, Statistics statistics, EventQueue eventQueue, long ioWait, Gui gui){
 		this.ioQueue = ioQueue;
 		this.statistics = statistics;
 		this.ioWait = ioWait;

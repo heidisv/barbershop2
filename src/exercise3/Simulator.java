@@ -54,7 +54,7 @@ public class Simulator implements Constants
 		cpu = new Cpu(cpuQueue, maxCpuTime, statistics, gui);
 		
 		//io is added here
-		io = new Io(ioQueue, statistics, eventQueue, gui);
+		io = new Io(ioQueue, statistics, eventQueue, avgIoTime, gui);
     }
 
     /**
@@ -184,7 +184,7 @@ public class Simulator implements Constants
 			p.enterCpuQueue(clock);
 		}
 		
-		p = cpuStart();
+		p = cpu.start();
 		if (p != null){
 			p.enterCpu(clock);
 			createEvent(p);
@@ -196,14 +196,14 @@ public class Simulator implements Constants
 		if (p == null){
 			return;
 		}
-		if (p.timeToIo() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime()){
+		if (p.timeToIO() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime()){
 			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock + cpu.getMaxCpuTime()));
 		}
-		else if (p.timeToIo() > p.getCpuTimeNeeded()){
+		else if (p.timeToIO() > p.getCpuTimeNeeded()){
 			eventQueue.insertEvent(new Event(END_PROCESS, clock + p.getCpuTimeNeeded()));
 		}
 		else{
-			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.timeToIo()));
+			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.timeToIO()));
 		}
 	}
 
