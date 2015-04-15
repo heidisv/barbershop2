@@ -47,6 +47,10 @@ public class Process implements Constants
 
 	/** The global time of the last event involving this process */
 	private long timeOfLastEvent;
+	
+	private long startUpTime = 0;
+	
+	private long endTime = 0;
 
 	/**
 	 * Creates a new process with given parameters. Other parameters are randomly
@@ -65,6 +69,9 @@ public class Process implements Constants
 		timeOfLastEvent = creationTime;
 		// Assign a process ID
 		processId = nextProcessId++;
+		
+		this.startUpTime = creationTime;
+		timeToNextIoOperation = (long)(Math.random()* avgIoInterval *2 + avgIoInterval / 4);
 		// Assign a pseudo-random color used by the GUI
 		int red = 64+(int)((processId*101)%128);
 		int green = 64+(int)((processId*47)%128);
@@ -117,7 +124,71 @@ public class Process implements Constants
 	public void updateStatistics(Statistics statistics) {
 		statistics.totalTimeSpentWaitingForMemory += timeSpentWaitingForMemory;
 		statistics.nofCompletedProcesses++;
+		
+		statistics.totalTimeInReadyQueue += timeSpentInReadyQueue;
+		statistics.totalCPUTime += this.timeSpentInCpu;
+		statistics.totalTimeWaitingForIO += timeSpentWaitingForIo;
+		statistics.totalIOTime += timeSpentInIo;
+		statistics.totalNofTimesInIOQueue += nofTimesInIoQueue;
 	}
-
+	
 	// Add more methods as needed
+	
+	public void updateFinalStat(Statistics stats){
+		stats.totalSystemTime += (this.endTime - this.startUpTime);
+	}
+	
+	public synchronized long timeToIO(){
+		if (timeToNextIoOperation == 0){
+			return timeToNextIoOperation = (long)(Math.random()*avgIoInterval*2 + avgIoInterval/4);
+		}
+		else{
+			return timeToNextIoOperation;
+		}
+	}
+	
+	public long getCpuTimeNeeded(){
+		return cpuTimeNeeded;
+	}
+	
+	public synchronized void leftCpu(long clock){
+		timeSpentInCpu += clock - timeOfLastEvent;
+		cpuTimeNeeded -= clock - timeOfLastEvent;
+		timeToNextIoOperation -= clock - timeOfLastEvent;
+		timeOfLastEvent = clock;
+		endTime = clock;
+		notifyAll();
+	}
+	
+	public synchronized void enterCpu(long clock){
+		timeSpentInReadyQueue += clock - timeOfLastEvent;
+		timeOfLastEvent = clock;
+		notifyAll();
+	}
+	
+	public synchronized void enterCpuQueue(long clock){
+		nofTimesInReadyQueue++;
+		timeOfLastEvent = clock;
+		notifyAll();
+	}
+	
+	public synchronized void enterIoQueue(long clock){
+		nofTimesInIoQueue++;
+		timeSpentInReadyQueue += clock - timeOfLastEvent;
+		timeOfLastEvent = clock;
+		notifyAll();
+	}
+	
+	public synchronized void enterIo(long clock){
+		timeSpentWaitingForIo += clock - timeOfLastEvent;
+		timeOfLastEvent = clock;
+		notifyAll();
+	}
+	
+	public synchronized void leftIo(long clock){
+		timeSpentInIo += clock - timeOfLastEvent;
+		timeToNextIoOperation = (long)(Math.random()*avgIoInterval);
+		timeOfLastEvent = clock;
+		notifyAll();
+	}
 }
