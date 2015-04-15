@@ -22,6 +22,10 @@ public class Simulator implements Constants
 	/** The average length between process arrivals */
 	private long avgArrivalInterval;
 	// Add member variables as needed
+	
+	private Cpu cpu;
+	
+	private Io io;
 
 	/**
 	 * Constructs a scheduling simulator with the given parameters.
@@ -45,6 +49,12 @@ public class Simulator implements Constants
 		memory = new Memory(memoryQueue, memorySize, statistics);
 		clock = 0;
 		// Add code as needed
+		
+		//TODO: ADD COMMENT!!!!!!
+		cpu = new Cpu(cpuQueue, maxCpuTime, statistics, gui);
+		
+		//io is added here
+		io = new Io(ioQueue, statistics, eventQueue, gui);
     }
 
     /**
@@ -53,11 +63,12 @@ public class Simulator implements Constants
 	 * GUI is clicked.
 	 */
 	public void simulate() {
-		// TODO: You may want to extend this method somewhat.
+		// This method is extended
 
 		System.out.print("Simulating...");
 		// Genererate the first process arrival event
 		eventQueue.insertEvent(new Event(NEW_PROCESS, 0));
+		
 		// Process events until the simulation length is exceeded:
 		while (clock < simulationLength && !eventQueue.isEmpty()) {
 			// Find the next event
@@ -69,6 +80,11 @@ public class Simulator implements Constants
 			// Let the memory unit and the GUI know that time has passed
 			memory.timePassed(timeDifference);
 			gui.timePassed(timeDifference);
+			
+			//TODO: ADD COMMENT!!!!!
+			io.updateTime(timeDifference);
+			cpu.updateTime(timeDifference);
+			
 			// Deal with the event
 			if (clock < simulationLength) {
 				processEvent(event);
@@ -132,8 +148,16 @@ public class Simulator implements Constants
 		// As long as there is enough memory, processes are moved from the memory queue to the cpu queue
 		while(p != null) {
 			
-			// TODO: Add this process to the CPU queue!
+			// This process will be added to the CPU queue
+			
+			this.cpu.insertProcess(p);
+			if (this.cpu.isIdle()){
+				switchProcess();
+			}
+			
 			// Also add new events to the event queue if needed
+			//TODO: Understand and add comment!
+			eventQueue.insertEvent(new Event(SWITCH_PROCESS, 0));
 
 			// Since we haven't implemented the CPU and I/O device yet,
 			// we let the process leave the system immediately, for now.
@@ -152,14 +176,46 @@ public class Simulator implements Constants
 	 * Simulates a process switch.
 	 */
 	private void switchProcess() {
-		// Incomplete
+		Process p = cpu.getActive();
+		if (p != null){
+			p.leftCpu(clock);
+			cpu.insertProcess(p);
+			statistics.nofForcedCPUSwitches++;
+			p.enterCpuQueue(clock);
+		}
+		
+		p = cpuStart();
+		if (p != null){
+			p.enterCpu(clock);
+			createEvent(p);
+		}
+	}
+	
+	//TODO: COMMENT!!!!
+	private void createEvent(Process p){
+		if (p == null){
+			return;
+		}
+		if (p.timeToIo() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime()){
+			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock + cpu.getMaxCpuTime()));
+		}
+		else if (p.timeToIo() > p.getCpuTimeNeeded()){
+			eventQueue.insertEvent(new Event(END_PROCESS, clock + p.getCpuTimeNeeded()));
+		}
+		else{
+			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.timeToIo()));
+		}
 	}
 
 	/**
 	 * Ends the active process, and deallocates any resources allocated to it.
 	 */
 	private void endProcess() {
-		// Incomplete
+		Process p = cpu.getActive();
+		p.leftCpu(clock);
+		p.updateStatistics(statistics);
+		p.updateFinalStat(statistics);
+		memory.processCompleted(p);
 	}
 
 	/**
@@ -167,7 +223,15 @@ public class Simulator implements Constants
 	 * perform an I/O operation.
 	 */
 	private void processIoRequest() {
-		// Incomplete
+		statistics.nofIOOperations++;
+		Process p = cpu.getActive();
+		p.leftCpu(clock);
+		p.enterIoQueue(clock);
+		if (io.addProcess(p)){
+			p.enterIo(clock);
+			eventQueue.insertEvent(new Event(END_IO, clock + io.getIoTime()));
+		}
+		switchProcess();
 	}
 
 	/**
@@ -175,7 +239,19 @@ public class Simulator implements Constants
 	 * is done with its I/O operation.
 	 */
 	private void endIoOperation() {
-		// Incomplete
+		statistics.nofCompIOOperations++;
+		Process p = io.getProcess();
+		p.leftIo(clock);
+		cpu.insertProcess(p);
+		p.enterCpuQueue(clock);
+		if (cpu.isIdle()){
+			switchProcess();
+		}
+		p = io.start();
+		if (p != null){
+			p.enterIo(clock);
+			eventQueue.insertEvent(new Event(END_IO, clock + io.getIoTime()));
+		}
 	}
 
 	/**
