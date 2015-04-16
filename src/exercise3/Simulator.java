@@ -47,7 +47,7 @@ public class Simulator implements Constants
 		statistics = new Statistics();
 		eventQueue = new EventQueue();
 		memory = new Memory(memoryQueue, memorySize, statistics);
-		clock = 0;
+		this.clock = 0;
 		// Add code as needed
 		
 		//TODO: ADD COMMENT!!!!!!

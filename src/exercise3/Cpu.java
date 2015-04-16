@@ -13,6 +13,7 @@ public class Cpu {
 	public Cpu(Queue cpuQueue, long maxCpuTime, Statistics statistics, Gui gui){
 		this.cpuQueue = cpuQueue;
 		this.maxCpuTime = maxCpuTime;
+		this.gui = gui;
 		this.statistics = statistics;
 	}
 	
