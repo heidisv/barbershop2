@@ -27,7 +27,7 @@ public class Cpu {
 	
 	public Process getActive(){
 		Process p = this.activeProcess;
-		this.activeProcess = null;
+		//this.activeProcess = null;
 		return p;
 	}
 	
