@@ -161,7 +161,7 @@ public class Simulator implements Constants
 
 			// Since we haven't implemented the CPU and I/O device yet,
 			// we let the process leave the system immediately, for now.
-			memory.processCompleted(p);
+			//memory.processCompleted(p);
 			// Try to use the freed memory:
 			flushMemoryQueue();
 			// Update statistics
