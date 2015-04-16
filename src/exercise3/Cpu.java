@@ -1,59 +1,61 @@
 package exercise3;
 
 public class Cpu {
-	
-	//TODO: ADD comments in the whole class!!!!!!!!!!!!!!!!!!!!!!!
-	
-	private Queue cpuQueue;
+	private Queue queue;
 	private Statistics statistics;
-	private Process activeProcess;
-	private Gui gui;
-	private long maxCpuTime;
-	
-	public Cpu(Queue cpuQueue, long maxCpuTime, Statistics statistics, Gui gui){
-		this.cpuQueue = cpuQueue;
+	public long maxCpuTime;
+	public Process current;
+
+    public Cpu(Queue queue, long maxCpuTime, Statistics statistics) {
+		this.queue = queue;
 		this.maxCpuTime = maxCpuTime;
-		this.gui = gui;
 		this.statistics = statistics;
-	}
-	
-	public void insertProcess(Process p){
-		cpuQueue.insert(p);
-	}
-	
-	public boolean isIdle(){
-		return this.activeProcess == null;
-	}
-	
-	public Process getActive(){
-		Process p = this.activeProcess;
-		this.activeProcess = null;
-		return p;
-	}
-	
-	public long getMaxCpuTime(){
-		return maxCpuTime;
-	}
-	
-	public Process start(){
-		if (!this.cpuQueue.isEmpty()){
-			Process p = (Process) this.cpuQueue.removeNext();
-			this.activeProcess = p;
-			gui.setCpuActive(p);
-			return p;
-		}
-		else{
-			this.activeProcess = null;
-			gui.setCpuActive(null);
-			return this.activeProcess;
-		}
-	}
-	
-	public void updateTime(long timePassed){
-		this.statistics.cpuQueueLengthTime += this.cpuQueue.getQueueLength() * timePassed;
-		if (this.cpuQueue.getQueueLength() > this.statistics.cpuQueueLargestLength){
-			this.statistics.cpuQueueLargestLength = this.cpuQueue.getQueueLength();
-		}
+		this.current = null;
+    }
+
+	public boolean isIdle() {
+		return (current == null);
 	}
 
+	public boolean isEmpty() {
+		return this.queue.isEmpty();
+	}
+
+	public Process switchProcess(Gui gui, long clock) {
+		if (!this.isIdle()) {
+			this.current.updateCpuTimeNeeded(this.maxCpuTime);
+			this.insertProcess(this.current);
+			this.current.leftCpu(clock);
+		}
+
+		Process next = null;
+		if (!this.isEmpty()) {
+			next = (Process) this.queue.removeNext();
+			next.enteredCpu(clock);
+		}
+		this.current = next;
+		gui.setCpuActive(next);
+
+		return next;
+	}
+
+	public void insertProcess(Process p) {
+		p.incrTimesInReadyQueue();
+		this.queue.insert(p);
+	}
+
+	public void timePassed(long timePassed) {
+		if (this.isIdle())
+			this.statistics.cpuTimeSpentWaiting += timePassed;
+		else
+			this.statistics.cpuTimeSpentProcessing += timePassed;
+
+		this.statistics.cpuQueueLengthTime += this.queue.getQueueLength()*timePassed;
+		if (this.queue.getQueueLength() > this.statistics.cpuQueueLargestLength)
+			this.statistics.cpuQueueLargestLength = this.queue.getQueueLength();
+    }
+    
+    public void processCompleted() {
+    	this.current = null;
+	}
 }

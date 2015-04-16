@@ -21,10 +21,8 @@ public class Simulator implements Constants
 	private long simulationLength;
 	/** The average length between process arrivals */
 	private long avgArrivalInterval;
-	// Add member variables as needed
 	
 	private Cpu cpu;
-	
 	private Io io;
 
 	/**
@@ -44,18 +42,14 @@ public class Simulator implements Constants
 		this.simulationLength = simulationLength;
 		this.avgArrivalInterval = avgArrivalInterval;
 		this.gui = gui;
-		statistics = new Statistics();
-		eventQueue = new EventQueue();
-		memory = new Memory(memoryQueue, memorySize, statistics);
+		this.statistics = new Statistics();
+		this.eventQueue = new EventQueue();
+		this.memory = new Memory(memoryQueue, memorySize, statistics);
+		this.cpu = new Cpu(cpuQueue, maxCpuTime, statistics);
+		this.io = new Io(ioQueue, avgIoTime, statistics);
 		this.clock = 0;
-		// Add code as needed
 		
-		//TODO: ADD COMMENT!!!!!!
-		cpu = new Cpu(cpuQueue, maxCpuTime, statistics, gui);
-		
-		//io is added here
-		io = new Io(ioQueue, statistics, eventQueue, avgIoTime, gui);
-    }
+	}
 
     /**
 	 * Starts the simulation. Contains the main loop, processing events.
@@ -63,12 +57,9 @@ public class Simulator implements Constants
 	 * GUI is clicked.
 	 */
 	public void simulate() {
-		// This method is extended
-
 		System.out.print("Simulating...");
 		// Genererate the first process arrival event
 		eventQueue.insertEvent(new Event(NEW_PROCESS, 0));
-		
 		// Process events until the simulation length is exceeded:
 		while (clock < simulationLength && !eventQueue.isEmpty()) {
 			// Find the next event
@@ -79,20 +70,13 @@ public class Simulator implements Constants
 			clock = event.getTime();
 			// Let the memory unit and the GUI know that time has passed
 			memory.timePassed(timeDifference);
+			cpu.timePassed(timeDifference);
+			io.timePassed(timeDifference);
 			gui.timePassed(timeDifference);
-			
-			//TODO: ADD COMMENT!!!!!
-			io.updateTime(timeDifference);
-			cpu.updateTime(timeDifference);
-			
 			// Deal with the event
 			if (clock < simulationLength) {
 				processEvent(event);
 			}
-
-			// Note that the processing of most events should lead to new
-			// events being added to the event queue!
-
 		}
 		System.out.println("..done.");
 		// End the simulation by printing out the required statistics
@@ -110,7 +94,7 @@ public class Simulator implements Constants
 				createProcess();
 				break;
 			case SWITCH_PROCESS:
-				switchProcess();
+				switchProcess(true);
 				break;
 			case END_PROCESS:
 				endProcess();
@@ -147,76 +131,41 @@ public class Simulator implements Constants
 		Process p = memory.checkMemory(clock);
 		// As long as there is enough memory, processes are moved from the memory queue to the cpu queue
 		while(p != null) {
-			
-			// This process will be added to the CPU queue
-			
+			if (this.cpu.isIdle() && this.cpu.isEmpty())
+				this.eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+1));
 			this.cpu.insertProcess(p);
-			if (this.cpu.isIdle()){
-				switchProcess();
-			}
-			
-			// Also add new events to the event queue if needed
-			//TODO: Understand and add comment!
-			eventQueue.insertEvent(new Event(SWITCH_PROCESS, 0));
-
-			// Since we haven't implemented the CPU and I/O device yet,
-			// we let the process leave the system immediately, for now.
-			//memory.processCompleted(p);
-			// Try to use the freed memory:
-			flushMemoryQueue();
-			// Update statistics
-			p.updateStatistics(statistics);
-
-			// Check for more free memory
 			p = memory.checkMemory(clock);
-		}
-	}
-	
-	//TODO: COMMENT!!!!
-	private void createEvent(Process p){
-		if (p == null){
-			return;
-		}
-		if (p.timeToIO() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime()){
-			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock + cpu.getMaxCpuTime()));
-		}
-		else if (p.timeToIO() > p.getCpuTimeNeeded()){
-			eventQueue.insertEvent(new Event(END_PROCESS, clock + p.getCpuTimeNeeded()));
-		}
-		else{
-			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.timeToIO()));
 		}
 	}
 
 	/**
 	 * Simulates a process switch.
 	 */
-	private void switchProcess() {
-		Process p = cpu.getActive();
-		if (p != null){
-			p.leftCpu(clock);
-			cpu.insertProcess(p);
-			statistics.nofForcedCPUSwitches++;
-			p.enterCpuQueue(clock);
-		}
-		
-		p = cpu.start();
-		if (p != null){
-			p.enterCpu(clock);
-			createEvent(p);
+	private void switchProcess(boolean forced) {
+		if (forced && !this.cpu.isEmpty())
+			this.statistics.nofProcessSwitches++;
+
+		Process next = this.cpu.switchProcess(this.gui, clock);
+		if (next != null) {
+			if (next.getIoTime() < this.cpu.maxCpuTime && next.getIoTime() < next.getCpuTimeNeeded())
+				this.eventQueue.insertEvent(new Event(IO_REQUEST, clock+1+next.getIoTime()));
+			else if (next.getCpuTimeNeeded() < this.cpu.maxCpuTime)
+				this.eventQueue.insertEvent(new Event(END_PROCESS, clock+1+next.getCpuTimeNeeded()));
+			else
+				this.eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+1+this.cpu.maxCpuTime));
 		}
 	}
-	
 
 	/**
 	 * Ends the active process, and deallocates any resources allocated to it.
 	 */
 	private void endProcess() {
-		Process p = cpu.getActive();
-		p.leftCpu(clock);
-		p.updateStatistics(statistics);
-		p.updateFinalStat(statistics);
-		memory.processCompleted(p);
+		this.cpu.current.updateCpuTimeNeeded(this.cpu.current.getCpuTimeNeeded());
+		this.cpu.current.leftCpu(clock);
+		this.cpu.current.updateStatistics(this.statistics);
+		this.memory.processCompleted(this.cpu.current);
+		this.cpu.processCompleted();
+		this.switchProcess(false);
 	}
 
 	/**
@@ -224,15 +173,17 @@ public class Simulator implements Constants
 	 * perform an I/O operation.
 	 */
 	private void processIoRequest() {
-		statistics.nofIOOperations++;
-		Process p = cpu.getActive();
-		p.leftCpu(clock);
-		p.enterIoQueue(clock);
-		if (io.addProcess(p)){
-			p.enterIo(clock);
-			eventQueue.insertEvent(new Event(END_IO, clock + io.getIoTime()));
+		this.cpu.current.updateCpuTimeNeeded(this.cpu.current.getIoTime());
+		this.cpu.current.leftCpu(clock);
+		
+		this.io.insertProcess(this.cpu.current);
+		if (this.io.isIdle()) {
+			this.io.processIo(this.gui, clock);
+			this.eventQueue.insertEvent(new Event(END_IO, clock+1+this.io.avgIoTime));
 		}
-		switchProcess();
+
+		this.cpu.current = null;
+		this.switchProcess(false);
 	}
 
 	/**
@@ -240,19 +191,16 @@ public class Simulator implements Constants
 	 * is done with its I/O operation.
 	 */
 	private void endIoOperation() {
-		statistics.nofCompIOOperations++;
-		Process p = io.getProcess();
-		p.leftIo(clock);
-		cpu.insertProcess(p);
-		p.enterCpuQueue(clock);
-		if (cpu.isIdle()){
-			switchProcess();
-		}
-		p = io.start();
-		if (p != null){
-			p.enterIo(clock);
-			eventQueue.insertEvent(new Event(END_IO, clock + io.getIoTime()));
-		}
+		this.io.current.leftIo(clock);
+		this.io.current.resetIoTime();
+		this.cpu.insertProcess(this.io.current);
+
+		if (this.cpu.isIdle())
+			this.eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+1));
+
+		this.io.processIo(this.gui, clock);
+		if (this.io.current != null)
+			this.eventQueue.insertEvent(new Event(END_IO, clock+1+this.io.avgIoTime));
 	}
 
 	/**
