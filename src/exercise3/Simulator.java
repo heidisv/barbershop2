@@ -171,6 +171,22 @@ public class Simulator implements Constants
 			p = memory.checkMemory(clock);
 		}
 	}
+	
+	//TODO: COMMENT!!!!
+	private void createEvent(Process p){
+		if (p == null){
+			return;
+		}
+		if (p.timeToIO() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime()){
+			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock + cpu.getMaxCpuTime()));
+		}
+		else if (p.timeToIO() > p.getCpuTimeNeeded()){
+			eventQueue.insertEvent(new Event(END_PROCESS, clock + p.getCpuTimeNeeded()));
+		}
+		else{
+			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.timeToIO()));
+		}
+	}
 
 	/**
 	 * Simulates a process switch.
@@ -191,21 +207,6 @@ public class Simulator implements Constants
 		}
 	}
 	
-	//TODO: COMMENT!!!!
-	private void createEvent(Process p){
-		if (p == null){
-			return;
-		}
-		if (p.timeToIO() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime()){
-			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock + cpu.getMaxCpuTime()));
-		}
-		else if (p.timeToIO() > p.getCpuTimeNeeded()){
-			eventQueue.insertEvent(new Event(END_PROCESS, clock + p.getCpuTimeNeeded()));
-		}
-		else{
-			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.timeToIO()));
-		}
-	}
 
 	/**
 	 * Ends the active process, and deallocates any resources allocated to it.

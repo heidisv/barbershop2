@@ -103,7 +103,7 @@ public class CustomerQueue {
 		//If the waiting room has been empty, notify that there has come a new customer
 		//Wake the barbers form wait-state
 		if(currentLength==1){
-			notifyAll();
+			//notifyAll();
 		}
 		gui.println("A new customer has arrived the waitingroom.");
 		
