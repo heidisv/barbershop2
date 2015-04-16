@@ -220,8 +220,9 @@ public class Simulator implements Constants {
 	 */
 	private void endProcess() {
 		Process o = cpu.removeActive();
-		gui.setCpuActive(cpu.getCurrent());
+		
 		memory.processCompleted(o);
+		gui.setCpuActive(cpu.getCurrent());
 		// Update statistics
 		o.updateStatistics(statistics, clock);
 		Process active = cpu.getCurrent();
@@ -269,9 +270,10 @@ public class Simulator implements Constants {
 		}
 		Process o = io.remove();
 		cpu.insert(o);
-		//Nullpointerexception her ved for kjapp simulering: 
-		o.performIO(clock);
-
+		//Nullpointerexception her ved for kjapp simulering 
+		if(o != null){
+			o.performIO(clock);
+		}
 		gui.setIoActive(io.getCurrent());
 		// Update statistics for finished process
 		statistics.nofTimesPlacedInIOQueue++;
