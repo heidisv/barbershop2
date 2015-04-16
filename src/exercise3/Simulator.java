@@ -314,7 +314,7 @@ public class Simulator implements Constants {
 		System.out.println("Please input system parameters: ");
 
 		System.out.print("Memory size (KB): ");
-		long memorySize = 8096; // readLong(reader);
+		long memorySize = readLong(reader);
 		while (memorySize < 400) {
 			System.out
 					.println("Memory size must be at least 400 KB. Specify memory size (KB): ");
@@ -322,14 +322,13 @@ public class Simulator implements Constants {
 		}
 
 		System.out.print("Maximum uninterrupted cpu time for a process (ms): ");
-		// maxCpuTime=50 causes exception 
-		long maxCpuTime = 500; // readLong(reader);
+		long maxCpuTime = readLong(reader);
 
 		System.out.print("Average I/O operation time (ms): ");
-		long avgIoTime = 220; // readLong(reader);
+		long avgIoTime = readLong(reader);
 
 		System.out.print("Simulation length (ms): ");
-		long simulationLength = 100000; // readLong(reader);
+		long simulationLength = readLong(reader);
 		while (simulationLength < 1) {
 			System.out
 					.println("Simulation length must be at least 1 ms. Specify simulation length (ms): ");
@@ -337,10 +336,10 @@ public class Simulator implements Constants {
 		}
 
 		System.out.print("Average time between process arrivals (ms): ");
-		long avgArrivalInterval = 100; // readLong(reader);
+		long avgArrivalInterval = readLong(reader);
 
 		SimulationGui gui = new SimulationGui(memorySize, maxCpuTime,
 				avgIoTime, simulationLength, avgArrivalInterval);
-		gui.run();
+		
 	}
 }
