@@ -61,10 +61,12 @@ public class Statistics
     	System.out.println("Number of (forced) process switches:                            " + nofForcedCPUSwitches);
     	System.out.println("Number of processed I/O operations:                             " + nofCompIOOperations);
     	System.out.println("Average throughput (processes per second):                      " + (float) nofCompletedProcesses / simulationLength * 1000);
+    	System.out.println();
     	System.out.println("Total CPU time spent processing:                                " + totalCPUTime + " ms");
     	System.out.println("Fraction of CPU time spent processing:                          " + (float) totalCPUTime / simulationLength * 100 + " %");
     	System.out.println("Total CPU time spent waiting:                                   " + (simulationLength - totalCPUTime) + " ms");
     	System.out.println("Fraction of CPU time spent waiting:                             " + (float) (simulationLength - totalCPUTime) / simulationLength * 100 + " %");
+    	System.out.println();
     	System.out.println("Largest occuring memory queue length:                           " + memoryQueueLargestLength);
     	System.out.println("Average memory queue length:                                    " + (float) memoryQueueLengthTime / simulationLength + " %");
     	System.out.println("Largest occuring cpu queue length:                              " + cpuQueueLargestLength);
@@ -78,6 +80,7 @@ public class Statistics
     				(float) totalNofTimesInReadyQueue / nofCompletedProcesses);
     		System.out.println("Average # of times a process has been placed in I/O queue:      " +
     				(float) totalNofTimesInIOQueue / nofCompletedProcesses);
+    		System.out.println();
     		System.out.println("Average time spent in system per process:                       " +
     				(float) totalSystemTime / nofCompletedProcesses);
     		System.out.println("Average time spent waiting for memory per process:              " +
