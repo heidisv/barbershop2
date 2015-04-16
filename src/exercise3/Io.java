@@ -1,51 +1,50 @@
 package exercise3;
 
 public class Io {
-	private Queue queue;
+
+	private Queue ioQueue;
 	private Statistics statistics;
-	public long avgIoTime;
-	public Process current;
+	private Process current = null;
 
-    public Io(Queue queue, long avgIoTime, Statistics statistics) {
-		this.queue = queue;
-		this.avgIoTime = avgIoTime;
+	public Io(Queue ioQueue, Statistics statistics) {
+		this.ioQueue = ioQueue;
 		this.statistics = statistics;
-		this.current = null;
-    }
-
-	public boolean isIdle() {
-		return (current == null);
 	}
 
-	public boolean isEmpty() {
-		return this.queue.isEmpty();
+	public void insert(Object o) {
+		if (getCurrent() == null)
+			setCurrent((Process) o);
+		else
+			ioQueue.insert(o);
+
 	}
 
-	public Process processIo(Gui gui, long clock) {
-		this.statistics.nofProcessedIoOp++;
-		Process next = null;
-		if (!this.isEmpty()) {
-			next = (Process) this.queue.removeNext();
-			next.enteredIo(clock);
-		}
-		this.current = next;
-		gui.setIoActive(next);
-
-		return next;
+	public Process remove() {
+		Process c = getCurrent();
+		if (size() > 0)
+			setCurrent((Process) ioQueue.removeNext());
+		else
+			setCurrent(null);
+		return c;
 	}
 
-	public void insertProcess(Process p) {
-		p.incrTimesInIoQueue();
-		this.queue.insert(p);
+	public int size() {
+		return ioQueue.getQueueLength();
 	}
 
+	public Process getCurrent() {
+		return current;
+	}
+
+	private void setCurrent(Process current) {
+		this.current = current;
+
+	}
 	public void timePassed(long timePassed) {
-		this.statistics.ioQueueLengthTime += this.queue.getQueueLength()*timePassed;
-		if (this.queue.getQueueLength() > this.statistics.ioQueueLargestLength)
-			this.statistics.ioQueueLargestLength = this.queue.getQueueLength();
-    }
-    
-    public void processCompleted() {
-    	this.current = null;
+		statistics.ioQueueLengthTime += ioQueue.getQueueLength() * timePassed;
+		if (ioQueue.getQueueLength() > statistics.ioQueueLargestLength) {
+			statistics.ioQueueLargestLength = ioQueue.getQueueLength();
+		}
 	}
+
 }
