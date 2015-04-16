@@ -1,71 +1,73 @@
 package exercise3;
 
-public class Cpu {
+import exercise3.Gui;
+import exercise3.Process;
+import exercise3.Queue;
+import exercise3.Statistics;
 
+
+
+public class Cpu {
+	/** The queue of processes waiting for free memory */
 	private Queue cpuQueue;
+	/** A reference to the statistics collector */
 	private Statistics statistics;
+	/** The amount of memory in the memory device */
+	/** The amount of free memory in the memory device */
+	private Process activeProcess;
+	
+	private Gui gui;
+	private long maxCpuTime;
 
 	/**
 	 * Creates a new memory device with the given parameters.
-	 * 
-	 * @param memoryQueue
-	 *            The memory queue to be used.
-	 * @param memorySize
-	 *            The amount of memory in the memory device.
-	 * @param statistics
-	 *            A reference to the statistics collector.
+	 * @param memoryQueue	The memory queue to be used.
+	 * @param memorySize	The amount of memory in the memory device.
+	 * @param statistics	A reference to the statistics collector.
 	 */
-	public Cpu(Queue cpuQueue, Statistics statistics) {
+    public Cpu(Queue cpuQueue, long maxCpuTime, Statistics statistics, Gui gui) {
 		this.cpuQueue = cpuQueue;
 		this.statistics = statistics;
-	}
-
-	/**
-	 * Adds a process to the memory queue.
-	 * 
-	 * @param p
-	 *            The process to be added.
-	 * @return
-	 */
-	public Process switchProcess() {
-		if (cpuQueue.getQueueLength() > 0) {
-			Object o = cpuQueue.removeNext();
-			cpuQueue.insert(o);
-			return getCurrent();
-		}
-		return null;
-	}
-
-	public void insert(Process p) {
+		this.gui = gui;
+		this.maxCpuTime = maxCpuTime;
+    }
+    
+    public void insertProcess(Process p) {
 		cpuQueue.insert(p);
-		//update statistics
-		statistics.nofTimesPlacedInCPUQueue++;
 	}
+    
+    public boolean isIdle() {
+    	return this.activeProcess == null;
+    }
+    
+    public Process getActive() {
+    	Process p = this.activeProcess;
+    	this.activeProcess = null;
+    	return p;
+    }
 
-	public Process removeActive() {
-		if (cpuQueue.getQueueLength() > 0) {
-			return (Process) cpuQueue.removeNext();
+	public long getMaxCpuTime() {
+		return maxCpuTime;
+	}
+    
+	public Process start() {
+		if (!this.cpuQueue.isEmpty()) {
+			Process p = (Process) this.cpuQueue.removeNext();
+			this.activeProcess = p;
+			gui.setCpuActive(p);
+			return p;
 		}
-		return null;
-	}
-
-	public Process getCurrent() {
-		if (cpuQueue.getQueueLength() > 0) {
-			return (Process) cpuQueue.getNext();
+		else {
+			this.activeProcess = null;
+			gui.setCpuActive(null);
+			return this.activeProcess;
 		}
-		return null;
-	}
-
-	public int size() {
-		return cpuQueue.getQueueLength();
 	}
 	
-	public void timePassed(long timePassed) {
-		statistics.cpuQueueLengthTime += cpuQueue.getQueueLength()
-				* timePassed;
-		if (cpuQueue.getQueueLength() > statistics.cpuQueueLargestLength) {
-			statistics.cpuQueueLargestLength = cpuQueue.getQueueLength();
-		}
-	}
-
+	public void updateTime(long timePassed) {
+        this.statistics.cpuQueueLengthTime += this.cpuQueue.getQueueLength() * timePassed;
+        if (this.cpuQueue.getQueueLength() > this.statistics.cpuQueueLargestLength) {
+        	this.statistics.cpuQueueLargestLength = this.cpuQueue.getQueueLength();
+        }
+    }
 }
