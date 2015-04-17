@@ -51,7 +51,7 @@ public class Simulator implements Constants
 		memory = new Memory(memoryQueue, memorySize, statistics);
 		cpu = new Cpu(cpuQueue, maxCpuTime, statistics, gui);
 		
-		//legg til io her
+		//add io
 		io = new Io(ioQueue, statistics, eventQueue, avgIoTime, gui);
 		this.clock = 0;
     }
@@ -82,6 +82,8 @@ public class Simulator implements Constants
 			// Let the memory unit and the GUI know that time has passed
 			memory.timePassed(timeDifference);
 			gui.timePassed(timeDifference);
+			
+			//update time for io and cpu
 			io.updateTime(timeDifference);
 			cpu.updateTime(timeDifference);
 			
@@ -147,21 +149,14 @@ public class Simulator implements Constants
 		Process p = memory.checkMemory(clock);
 		// As long as there is enough memory, processes are moved from the memory queue to the cpu queue
 		while(p != null) {
-			this.cpu.insertProcess(p); //legger til prosess i cpu-kø
+			this.cpu.insertProcess(p); //adds process in cpu queue
 			
 			if (this.cpu.isIdle()) {
 				switchProcess();
 			}
 			
-			// Also add new events to the event queue if needed
-
-			//eventQueue.insertEvent(new Event(SWITCH_PROCESS, 0));
-
-			
 			// Try to use the freed memory:
 			flushMemoryQueue();
-			// Update statistics
-			//p.updateStatistics(statistics);
 
 			// Check for more free memory
 			p = memory.checkMemory(clock);
@@ -171,12 +166,15 @@ public class Simulator implements Constants
 		if (p == null)
 			return;
 
-		if (p.timeToIO() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime())
+		if (p.timeToIO() > cpu.getMaxCpuTime() && p.getCpuTimeNeeded() > cpu.getMaxCpuTime()){
 			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock + cpu.getMaxCpuTime()));
-		else if (p.timeToIO() > p.getCpuTimeNeeded())
+		}
+		else if (p.timeToIO() > p.getCpuTimeNeeded()){
 			eventQueue.insertEvent(new Event(END_PROCESS, clock + p.getCpuTimeNeeded()));
-		else
+		}
+		else{
 			eventQueue.insertEvent(new Event(IO_REQUEST, clock + p.timeToIO()));
+		}
 	}
 	/**
 	 * Simulates a process switch.
