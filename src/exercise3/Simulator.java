@@ -155,11 +155,8 @@ public class Simulator implements Constants
 			
 			// Also add new events to the event queue if needed
 
-			//FIXME: Hvilken event og tid skal vi bruke her?
-//			eventQueue.insertEvent(new Event(SWITCH_PROCESS, 0));
+			//eventQueue.insertEvent(new Event(SWITCH_PROCESS, 0));
 
-			
-			//FIXME: legg denne til et sted: memory.processCompleted(p);
 			
 			// Try to use the freed memory:
 			flushMemoryQueue();
